@@ -17,7 +17,8 @@ pip install -r requirements.txt
 
 ```python
 if __name__ == '__main__':
-    baiduTranslate = BaiduTranslateJS()
+    baiduTranslate = BaiduTranslateJS() # 翻译量短时间过大会被风控，需要进一步的逆向...此时建议使用selenium方法，速度会慢了不少
+#    baiduTranslate = BaiduSelenium()
     translaExe = Translator(baiduTranslate)
 
     mdGenerated = MdFileGenerater(r"文件夹路径")  # 根据传入的dirpath路径，检索文件夹下的pdf生成标题带链接的md文档

@@ -1,2 +1,6 @@
 PyExecJS
 requests
+pdfminer3k
+PyPDF2
+selenium
+tqdm

@@ -73,9 +73,9 @@ function ee(t) {
     ''')
         self.url = "https://fanyi.baidu.com/v2transapi"
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-            "Cookie": "BAIDUID=75065710223A0C64AC3A6BD7E51A2283:FG=1; BAIDUID_BFESS=75065710223A0C64AC3A6BD7E51A2283:FG=1; APPGUIDE_10_0_2=1; REALTIME_TRANS_SWITCH=1; FANYI_WORD_SWITCH=1; HISTORY_SWITCH=1; SOUND_SPD_SWITCH=1; SOUND_PREFER_SWITCH=1; Hm_lvt_64ecd82404c51e03dc91cb9e8c025574=1673528741; Hm_lpvt_64ecd82404c51e03dc91cb9e8c025574=1673528741; ab_sr=1.0.1_MTgyZmM0YzgxNDIwNWMzMDZlN2ZmY2Y3ZTkxYjZhOTczZDE1NzRkYmJmNzBlY2VjNmU1MmJkMmI5MGUzNWRjODc1ZmRhMDFhYmNlM2NhMDg5OTk3NjdkN2U5OTgzMzkyYTkzMzFlZWVlMWRmYjYyZTQzMzk4NGEzZTQyNjJkN2Y4ZDgwN2E1YWY3NGVmODk5YjM1YzA5NTZlZWYzN2QzMA==",
-            "Acs-Token": "1673510707025_1673529133700_WOOKLog92MYmDIqvisLzgdSfArW+6zAO7WNnOW/KxO0AD9gn8K5JtoA+lTeU1lIu9T39FrR92GcCg8RFhwcg90WGgfVoR+yMfq3tCxElnkD8uzqs1MkHrgNg93II5yw89Lg7plL7YG5h1hBKakPPd1F3SVpwSRd/c1iU688/cdBBw1kJqV8hw7gqHJ7bcQ4wNX82CqIu33SAKHMSMB9D/scyr6s2rZlpvPQQfBQ6sVaaIl1KASvz0M09g3NRFpTSzf5owRFVz49slDjDkGgnvh+oaB6CYTRn71Z8VlbTdAT7YtnHqF/+NBXkxeueOxv1"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.37 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.37",
+            "Cookie": "BAIDUID=5AF46A86F66A064D6EBE8F6CF1D19F1A:FG=1; BAIDUID_BFESS=5AF46A86F66A064D6EBE8F6CF1D19F1A:FG=1; APPGUIDE_10_0_2=1; REALTIME_TRANS_SWITCH=1; FANYI_WORD_SWITCH=1; HISTORY_SWITCH=1; SOUND_SPD_SWITCH=1; SOUND_PREFER_SWITCH=1; Hm_lvt_64ecd82404c51e03dc91cb9e8c025574=1673791125; Hm_lpvt_64ecd82404c51e03dc91cb9e8c025574=1673791125; ab_sr=1.0.1_ZDI2MmE5YjY3OTk5ZWRmMzMyYzQ4NWNjNjc0OTEyYzU5NWI3YTE4OTE4ZmNiYTU4YTg5MjMwNTI3MTI1OTFjNGE0N2EwMzM3ODZiMTE5NDFhOTQ4YmZjYmUwMDVlZGMzNWNjMDJjZmZjMTBmOWIzNmVlNjMxZmQ3ZDdhNWVjYTNiM2U0MTYxNmNmNmI0NjI0OTgxYWFmMjM1NGUzMGRkZQ==",
+            "Acs-Token": "1673769896714_1673791328673_/jNTmMdug05eaCQYNoVx12H//AUDvT1OVFIc1YEyP35x5FqBhdI1kuYKANBm/la3C+OXMEJUUb6VTnUeapUl+WXq9MjdV6J9/DlVJ0judQVWZCq/D7FDCatiFVp6520RnLlIa4nXdEvGkwCuIqItTVzTJnVP5+6c2abzI8OzRlKHemqIHawSr95ZGTxoy3/jV7KFDATPFWQWy22tqXvK3xrshmdx2sIjgQSeB3Ram6ihv1t5BQLCX3izFMzOipG6MFpCeHP3dVYMFadaqHso5VkPxTV+H5UG3SEp6qCwe9XGadzvL4UowwsJjPgsFyDHGiSjYJzuPnxC9RLnKUuThA=="
         }
         self.data = {
             "from": "en",
@@ -84,7 +84,7 @@ function ee(t) {
             "transtype": "translang",
             "simple_means_flag": "3",
             "sign": "",  # sign 是变化的需要我们执行js代码得到
-            "token": "471eff2d386d5dbc1b3cb02e41b463d9"  # token没有变化
+            "token": "01285396260689477642011522"  # token没有变化
         }
 
     def translate(self, query):
@@ -92,6 +92,7 @@ function ee(t) {
         通过构造的新的表单数据，访问api，获取翻译内容
         :return:
         """
+        response = {"errno": "", "errmsg": ""}
         try:
             self.data['sign'] = self.ctx.call('ee', query)
             self.data['query'] = query
@@ -101,7 +102,7 @@ function ee(t) {
             return x
         except Exception:
             traceback.print_exc()
-            print(query + " err")
+            print(query + " err " + str(response["errno"]) + "-" + response["errmsg"])
             return query
 
 

@@ -1,21 +1,48 @@
+import logging
 import os.path
+import re
 import time
 from typing import List
 
-from BaiduTranslator import BaiduTranslateJS
+from tqdm import tqdm
+
+from BaiduTranslatorBySelenium import BaiduSelenium
+from PDF2Txt import PDFToTxt
+
+logging.propagate = False
+logging.getLogger().setLevel(logging.ERROR)
 
 
 class Translator:
 
-    def __init__(self, translateExe, limitWordNum=5000):
+    def __init__(self, translateExe, pdf2Txt=None, limitWordNum=5000):
         """
         @param translateExe: 翻译类，需要实现特定方法def translate(query: str) -> str
         @param limitWordNum: 翻译时字符长度限制
         """
         self.limitWordNum = limitWordNum
         self.translateExe = translateExe
+        self.pdf2Txt = pdf2Txt
+
+    def translateLines(self, toTranslate: List[str], timeSleep=0.0) -> List[str]:
+        """
+        逐行文本翻译，并进行标题提取
+        :param timeSleep:
+        :param toTranslate:
+        :return:
+        """
+        translateStrList = []
+        for i in tqdm(toTranslate):
+            if i.startswith("#") and i.find("[") != -1 and i.endswith(")"):  # 标题提取
+                translateStr = self.translateEnToCnWithStr(i[i.find("[") + 1:i.find("]")])
+            else:
+                translateStr = self.translateEnToCnWithStr(i)
+            translateStrList.append(translateStr)
+            time.sleep(timeSleep)
+        return translateStrList
 
     def translateEnToCnWithStr(self, query: str) -> str:
+        query = re.sub(r'[^\x00-\x7F]+', '&', query)
         """文本翻译"""
         queryStrList = splitQuery(query, self.limitWordNum)
         ans = ""
@@ -34,16 +61,37 @@ class Translator:
         targetFilePath = filePath[:index] + curtime + filePath[index:]
         toTranslate = readAndDealFile(filePath)
         print("read " + filePath + " finished")
-        translateStrList = []
-        for i in toTranslate:
-            if i.startswith("#") and i.find("[") != -1 and i.endswith(")"):  # 标题提取
-                translateStr = self.translateEnToCnWithStr(i[i.find("[")+1:i.find("]")])
-            else:
-                translateStr = self.translateEnToCnWithStr(i)
-            translateStrList.append(translateStr)
+        translateStrList = self.translateLines(toTranslate)
         print("translate " + filePath + " finished")
-        writeToFile(targetFilePath, oriStrList=toTranslate, translateStrList=translateStrList)
+        writeToFileForTranslate(targetFilePath, oriStrList=toTranslate, translateStrList=translateStrList)
         print("write to " + targetFilePath + " finished")
+
+    def translateEnToCnWithDirFromPDF(self, dirTltPath: str, targetFile="", pdfReadAgain=False, timeSleep=0.5) -> None:
+        """
+        将dirPath文件夹下所有PDF翻译为中文，并写入targetFile（默认名称为文件夹名称_total.md）中，不同文件之间将以分割线
+        :param timeSleep:
+        :param pdfReadAgain:
+        :param targetFile: 目标文件
+        :param dirTltPath:查找pdf的路径
+        :return:
+        """
+        assert self.pdf2Txt is not None, "pdf2Txt is None"
+        assert os.path.exists(dirTltPath), dirTltPath + " not exists"
+        if targetFile == "" or targetFile is None:
+            targetFile = os.path.join(dirTltPath, os.path.basename(dirTltPath) + "_total.md")
+        txtPathList = self.pdf2Txt.pdf2txtWithDir(dirTltPath, pdfReadAgain=pdfReadAgain)
+        print(txtPathList)
+        for txtPath in txtPathList:
+            pdfName = txtPath[txtPath.rfind(os.path.sep)+1:-4]
+            currentPdf = pdfName+".pdf"
+            toTranslate = readAndDealFile(txtPath)
+            print(pdfName + "  read finished, translate started")
+            translateStrList = self.translateLines(toTranslate, timeSleep)
+            print(pdfName + " translate finished")
+            titleToAppend = "# [" + pdfName + "](file:///" + os.path.join(dirTltPath, currentPdf) + ")\n\n\n\n"
+            writeToFile(targetFile, titleToAppend)
+            writeToFileForTranslate(targetFile, oriStrList=toTranslate, translateStrList=translateStrList)
+            print(pdfName + " write finished")
 
 
 def readAndDealFile(filePath: str) -> List[str]:
@@ -72,14 +120,32 @@ def readAndDealFile(filePath: str) -> List[str]:
     return ans
 
 
-def writeToFile(filePath, oriStrList: List[str], translateStrList: List[str]):
+def writeToFile(filePath, toWriteStrOrList, append=True):
+    mod = "w"
+    if append:
+        mod = "a"
+    with open(filePath, mod, encoding='utf-8') as f:
+        if isinstance(toWriteStrOrList, str):
+            f.write(toWriteStrOrList)
+            f.flush()
+        else:
+            for i in range(toWriteStrOrList):
+                f.write(toWriteStrOrList)
+                f.write("\n")
+                f.flush()
+
+
+def writeToFileForTranslate(filePath, oriStrList: List[str], translateStrList: List[str], append=True):
     assert len(oriStrList) == len(translateStrList), "翻译存在遗漏"
-    with open(filePath, "a", encoding='utf-8') as f:
+    mod = "w"
+    if append:
+        mod = "a"
+    with open(filePath, mod, encoding='utf-8') as f:
         for i in range(len(oriStrList)):
             f.write(oriStrList[i])
-            f.write("\n")
-            f.write(translateStrList[i])
             f.write("\n\n")
+            f.write(translateStrList[i])
+            f.write("\n\n\n\n")
             f.flush()
 
 
@@ -127,9 +193,11 @@ def MdFileGenerater(dirPath: str) -> str:
 '''
 
 if __name__ == '__main__':
-    baiduTranslate = BaiduTranslateJS()
-    translaExe = Translator(baiduTranslate)
+    baiduTranslate = BaiduSelenium()
+    pdf2Txt = PDFToTxt()
+    translaExe = Translator(baiduTranslate, pdf2Txt=pdf2Txt)
 
-    mdGenerated = MdFileGenerater(r"文件夹路径")
-
-    translaExe.translateEnToCnWithFile(mdGenerated)
+    dirPath = r"F:\GraduateCareer\FirstYear\AnomalyDetectionOfMultimodalTimeSeriesData\20230109-0111"
+    mdGenerated = MdFileGenerater(dirPath)
+    # translaExe.translateEnToCnWithFile(mdGenerated)
+    translaExe.translateEnToCnWithDirFromPDF(dirPath)
