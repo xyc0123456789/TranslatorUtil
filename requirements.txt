@@ -4,3 +4,10 @@ pdfminer3k
 PyPDF2
 selenium
 tqdm
+huggingface_hub
+transformers
+sentencepiece
+sacremoses
+torch
+torchvision
+torchaudio

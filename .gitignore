@@ -1,2 +1,3 @@
 /.idea/
 __pycache__
+/model/opus_mt_en_zh

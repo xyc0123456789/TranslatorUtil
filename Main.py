@@ -6,9 +6,10 @@ from typing import List
 
 from tqdm import tqdm
 
-from BaiduTranslatorBySelenium import BaiduSelenium
-from PDF2Txt import PDFToTxt
+from model.OpusMtEn2Zh import OpusMtEn2Zh, opusDirName
+from util.PDF2Txt import PDFToTxt
 
+# 不打印pdfminer的各种warining信息
 logging.propagate = False
 logging.getLogger().setLevel(logging.ERROR)
 
@@ -42,8 +43,8 @@ class Translator:
         return translateStrList
 
     def translateEnToCnWithStr(self, query: str) -> str:
-        query = re.sub(r'[^\x00-\x7F]+', '&', query)
         """文本翻译"""
+        query = re.sub(r'[^\x00-\x7F]+', '&', query)  # 替换非ascii字符为&
         queryStrList = splitQuery(query, self.limitWordNum)
         ans = ""
         for i in queryStrList:
@@ -82,16 +83,16 @@ class Translator:
         txtPathList = self.pdf2Txt.pdf2txtWithDir(dirTltPath, pdfReadAgain=pdfReadAgain)
         print(txtPathList)
         for txtPath in txtPathList:
-            pdfName = txtPath[txtPath.rfind(os.path.sep)+1:-4]
-            currentPdf = pdfName+".pdf"
+            pdfName = txtPath[txtPath.rfind(os.path.sep) + 1:-4]
+            currentPdf = pdfName + ".pdf"
             toTranslate = readAndDealFile(txtPath)
-            print(pdfName + "  read finished, translate started")
+            print("《" + pdfName + "》  read finished, translate started")
             translateStrList = self.translateLines(toTranslate, timeSleep)
-            print(pdfName + " translate finished")
+            print("《" + pdfName + "》 translate finished")
             titleToAppend = "# [" + pdfName + "](file:///" + os.path.join(dirTltPath, currentPdf) + ")\n\n\n\n"
             writeToFile(targetFile, titleToAppend)
             writeToFileForTranslate(targetFile, oriStrList=toTranslate, translateStrList=translateStrList)
-            print(pdfName + " write finished")
+            print("《" + pdfName + "》 write finished")
 
 
 def readAndDealFile(filePath: str) -> List[str]:
@@ -168,11 +169,11 @@ def splitQuery(query: str, length: int, splitChar='.') -> List[str]:
         return [currentStr]
 
 
-def MdFileGenerater(dirPath: str) -> str:
-    """根据dirpath路径的文件夹下的pdf生成标题带链接的md文档"""
-    assert os.path.exists(dirPath), "文件夹不存在"
-    fileList = os.listdir(dirPath)
-    targetfile = os.path.join(dirPath, os.path.basename(dirPath) + ".md")
+def MdFileGenerater(dirMdPath: str) -> str:
+    """根据dirMdPath路径的文件夹下的pdf生成标题带链接的md文档"""
+    assert os.path.exists(dirMdPath), "文件夹不存在"
+    fileList = os.listdir(dirMdPath)
+    targetfile = os.path.join(dirMdPath, os.path.basename(dirMdPath) + ".md")
     if os.path.exists(targetfile):
         print(targetfile + " is exists")
         return targetfile
@@ -180,7 +181,7 @@ def MdFileGenerater(dirPath: str) -> str:
         for subFiles in fileList:
             if not subFiles.endswith(".pdf"):
                 continue
-            currentPdf = os.path.join(dirPath, subFiles)
+            currentPdf = os.path.join(dirMdPath, subFiles)
             f.write("# [" + subFiles[:-4] + "](file:///" + currentPdf + ")\n\n\n\n\n\n\n\n")
             f.flush()
     return targetfile
@@ -193,11 +194,13 @@ def MdFileGenerater(dirPath: str) -> str:
 '''
 
 if __name__ == '__main__':
-    baiduTranslate = BaiduSelenium()
-    pdf2Txt = PDFToTxt()
-    translaExe = Translator(baiduTranslate, pdf2Txt=pdf2Txt)
+    myModelPath = os.path.join(opusDirName, "opus_mt_en_zh")
+    opusMtTranslate = OpusMtEn2Zh(myModelPath)
 
-    dirPath = r"F:\GraduateCareer\FirstYear\AnomalyDetectionOfMultimodalTimeSeriesData\20230109-0111"
+    pdfToTxt = PDFToTxt()
+    translaExe = Translator(opusMtTranslate, pdf2Txt=pdfToTxt, limitWordNum=512)
+
+    dirPath = r"文件夹路径"
     mdGenerated = MdFileGenerater(dirPath)
     # translaExe.translateEnToCnWithFile(mdGenerated)
     translaExe.translateEnToCnWithDirFromPDF(dirPath)
