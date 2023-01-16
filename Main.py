@@ -160,7 +160,18 @@ def splitQuery(query: str, length: int, splitChar='.') -> List[str]:
         return [query]
     t = query.rfind(splitChar, 0, length)
     if t == -1:
-        return [query]
+        if splitChar == ".":
+            return splitQuery(query, length, " ")
+        else:
+            totalLen = len(query)
+            res = []
+            maxSplit = int(totalLen / length)
+            for i in range(maxSplit):
+                res.append(query[i*length:(i+1)*length])
+            if maxSplit * length < totalLen:
+                res.append(query[maxSplit * length:])
+            return res
+
     currentStr = query[:t + 1]
     if t + 1 < len(query):
         nextStrList = splitQuery(query[t + 1:], length)
@@ -200,7 +211,9 @@ if __name__ == '__main__':
     pdfToTxt = PDFToTxt()
     translaExe = Translator(opusMtTranslate, pdf2Txt=pdfToTxt, limitWordNum=512)
 
-    dirPath = r"文件夹路径"
+    dirPath = r""
     mdGenerated = MdFileGenerater(dirPath)
-    # translaExe.translateEnToCnWithFile(mdGenerated)
     translaExe.translateEnToCnWithDirFromPDF(dirPath)
+
+    # filePath = r""
+    # translaExe.translateEnToCnWithFile(filePath)

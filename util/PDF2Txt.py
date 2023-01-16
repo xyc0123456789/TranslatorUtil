@@ -65,9 +65,10 @@ class PDFToTxt:
         return txtPathList
 
 
-def removeNotNeed(oriFile, targetFilePath=""):
+def removeNotNeed(oriFile, targetFilePath="", rmTitleHead=True):
     """
     去除多余两行的空行， 拼接单字符行，去除references，acknowledgements
+    @:param rmTitleHead true：在开头#之前添加//
     """
     overWrited = targetFilePath == '' or targetFilePath is None
     with open(oriFile, "r", encoding="UTF-8") as f:
@@ -106,6 +107,9 @@ def removeNotNeed(oriFile, targetFilePath=""):
             # 去除references，acknowledgements
             if len(row) < 20 and (row.strip().lower() == "references" or row.strip().lower() == "acknowledgements"):
                 break
+
+            if rmTitleHead and row[0] == "#":
+                row = "//"+row
             ans.append(row)
 
     if overWrited:
@@ -120,6 +124,6 @@ def removeNotNeed(oriFile, targetFilePath=""):
 if __name__ == '__main__':
     pdf2text = PDFToTxt()
 
-    fpath = r"F:\GraduateCareer\FirstYear\AnomalyDetectionOfMultimodalTimeSeriesData\20230109-0111\A Survey on Transformers in Reinforcement Learning.pdf"
+    fpath = r""
     targetFile = pdf2text.pdfTotxt(fpath)
     removeNotNeed(targetFile)
