@@ -2,12 +2,12 @@ import logging
 import os.path
 import re
 import time
-from typing import List
+from typing import List, Tuple
 
 from tqdm import tqdm
 
 from model.OpusMtEn2Zh import OpusMtEn2Zh, opusDirName
-from util.PDF2Txt import PDFToTxt
+from util.PDF2Txt import PDFToTxt, transCidToChar
 
 # 不打印pdfminer的各种warining信息
 logging.propagate = False
@@ -25,7 +25,7 @@ class Translator:
         self.translateExe = translateExe
         self.pdf2Txt = pdf2Txt
 
-    def translateLines(self, toTranslate: List[str], timeSleep=0.0) -> List[str]:
+    def translateLines(self, toTranslate: List[str], timeSleep=0.0) -> Tuple[List[str], List[str]]:
         """
         逐行文本翻译，并进行标题提取
         :param timeSleep:
@@ -33,14 +33,18 @@ class Translator:
         :return:
         """
         translateStrList = []
-        for i in tqdm(toTranslate):
-            if i.startswith("#") and i.find("[") != -1 and i.endswith(")"):  # 标题提取
-                translateStr = self.translateEnToCnWithStr(i[i.find("[") + 1:i.find("]")])
+
+        for strToTranslate in tqdm(toTranslate):
+            # strToTranslate = transCidToChar(i)  # cid to char
+
+            if strToTranslate.startswith("#") and strToTranslate.find("[") != -1 and strToTranslate.endswith(")"):  # 标题提取
+                translateStr = self.translateEnToCnWithStr(strToTranslate[strToTranslate.find("[") + 1:strToTranslate.find("]")])
             else:
-                translateStr = self.translateEnToCnWithStr(i)
+                translateStr = self.translateEnToCnWithStr(strToTranslate)
             translateStrList.append(translateStr)
-            time.sleep(timeSleep)
-        return translateStrList
+            # time.sleep(timeSleep)
+
+        return toTranslate, translateStrList
 
     def translateEnToCnWithStr(self, query: str) -> str:
         """文本翻译"""
@@ -62,12 +66,12 @@ class Translator:
         targetFilePath = filePath[:index] + curtime + filePath[index:]
         toTranslate = readAndDealFile(filePath)
         print("read " + filePath + " finished")
-        translateStrList = self.translateLines(toTranslate)
+        toTranslate, translateStrList = self.translateLines(toTranslate)
         print("translate " + filePath + " finished")
         writeToFileForTranslate(targetFilePath, oriStrList=toTranslate, translateStrList=translateStrList)
         print("write to " + targetFilePath + " finished")
 
-    def translateEnToCnWithDirFromPDF(self, dirTltPath: str, targetFile="", pdfReadAgain=False, timeSleep=0.5) -> None:
+    def translateEnToCnWithDirFromPDF(self, dirTltPath: str, targetFile="", pdfReadAgain=False, timeSleep=0.0) -> None:
         """
         将dirPath文件夹下所有PDF翻译为中文，并写入targetFile（默认名称为文件夹名称_total.md）中，不同文件之间将以分割线
         :param timeSleep:
@@ -87,7 +91,7 @@ class Translator:
             currentPdf = pdfName + ".pdf"
             toTranslate = readAndDealFile(txtPath)
             print("《" + pdfName + "》  read finished, translate started")
-            translateStrList = self.translateLines(toTranslate, timeSleep)
+            toTranslate, translateStrList = self.translateLines(toTranslate, timeSleep)
             print("《" + pdfName + "》 translate finished")
             titleToAppend = "# [" + pdfName + "](file:///" + os.path.join(dirTltPath, currentPdf) + ")\n\n\n\n"
             writeToFile(targetFile, titleToAppend)
@@ -96,13 +100,14 @@ class Translator:
 
 
 def readAndDealFile(filePath: str) -> List[str]:
-    """#开头的作为标题处理，其他的中间有空行的不合并，没空行的，直接合并为一行"""
+    """#开头的作为标题处理，其他的中间有空行的不合并，没空行的，直接合并为一行，处理(cid:)"""
     ans = []
     with open(filePath, "r", encoding='utf-8') as f:
         lines = f.readlines()
     tmp = ''
     for row in lines:
         row = row.strip()
+        row = transCidToChar(row)  # 处理(cid:)
         if len(row) == 0 or row.startswith("#"):
             if len(tmp) > 0:
                 ans.append(tmp)
@@ -167,7 +172,7 @@ def splitQuery(query: str, length: int, splitChar='.') -> List[str]:
             res = []
             maxSplit = int(totalLen / length)
             for i in range(maxSplit):
-                res.append(query[i*length:(i+1)*length])
+                res.append(query[i * length:(i + 1) * length])
             if maxSplit * length < totalLen:
                 res.append(query[maxSplit * length:])
             return res

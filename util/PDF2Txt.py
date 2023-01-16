@@ -1,5 +1,6 @@
 import io
 import os.path
+import re
 from typing import List
 
 from pdfminer.converter import TextConverter
@@ -65,6 +66,23 @@ class PDFToTxt:
         return txtPathList
 
 
+def cidToChar(cidx):
+    return chr(int(re.findall(r'\(cid:(\d+)\)', cidx)[0]))
+
+
+def transCidToChar(cidx):
+    """
+    将cid转化为字符，多数情况翻译结果并不正确
+    :param cidx:
+    :return:
+    """
+    cidFinds = re.findall(r'\(cid:\d+\)', cidx)
+    if len(cidFinds) > 0:
+        for cids in cidFinds:
+            cidx = cidx.replace(cids, cidToChar(cids))
+    return cidx
+
+
 def removeNotNeed(oriFile, targetFilePath="", rmTitleHead=True):
     """
     去除多余两行的空行， 拼接单字符行，去除references，acknowledgements
@@ -109,7 +127,7 @@ def removeNotNeed(oriFile, targetFilePath="", rmTitleHead=True):
                 break
 
             if rmTitleHead and row[0] == "#":
-                row = "//"+row
+                row = "// " + row
             ans.append(row)
 
     if overWrited:
