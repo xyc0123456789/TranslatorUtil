@@ -1,14 +1,18 @@
 # https://huggingface.co/Helsinki-NLP/opus-mt-en-zh
 import os
+from abc import ABC
 
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, TranslationPipeline
 
+from util.BaseTranslator import BaseTranslator
+
 opusDirName = os.path.dirname(__file__)
 
 
-class OpusMtEn2Zh:
-    def __init__(self, modelPath):
+class OpusMtEn2Zh(BaseTranslator, ABC):
+    def __init__(self, modelPath,max_length=512):
+        super().__init__(max_length=max_length)
         self.tokenizer = AutoTokenizer.from_pretrained(modelPath)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(modelPath)
         if torch.cuda.is_available():
@@ -17,7 +21,7 @@ class OpusMtEn2Zh:
             self.translatePipeLine = TranslationPipeline(self.model, self.tokenizer)
         self.model.eval()
 
-    def translate(self, query):
+    def normalTranslate(self, query: str) -> str:
         res = self.translatePipeLine(query)
         if len(res) > 1:
             pass

@@ -9,6 +9,8 @@
 
 2023年1月16日更新 去huggingface找了一个翻译模型，辅助翻译还是够用的
 
+2023年1月17日新增PdfToPdfWithoutImg来处理pdf，暂时未见cid的情况，使用方法参考main.py（参考项目[EasyTrans](https://github.com/QPromise/EasyTrans)的处理方法）
+
 
 
 ## 使用方法
@@ -73,5 +75,8 @@ if __name__ == '__main__':
     mdGenerated = MdFileGenerater(dirPath)
     # translaExe.translateEnToCnWithFile(mdGenerated)
     translaExe.translateEnToCnWithDirFromPDF(dirPath)
+    
+    pdfToPdf = PdfToPdfWithoutImg(opusMtTranslate)
+    pdfToPdf.transferPdfWithDir(dirPath)
 ```
 

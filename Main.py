@@ -7,11 +7,14 @@ from typing import List, Tuple
 from tqdm import tqdm
 
 from model.OpusMtEn2Zh import OpusMtEn2Zh, opusDirName
+from util.BaseTranslator import splitQuery, writeToFileForTranslate
 from util.PDF2Txt import PDFToTxt, transCidToChar
+from util.PdfToPdfWithoutImg import PdfToPdfWithoutImg
 
 # 不打印pdfminer的各种warining信息
 logging.propagate = False
 logging.getLogger().setLevel(logging.ERROR)
+projectRoot = os.path.dirname(__file__)
 
 
 class Translator:
@@ -141,50 +144,6 @@ def writeToFile(filePath, toWriteStrOrList, append=True):
                 f.flush()
 
 
-def writeToFileForTranslate(filePath, oriStrList: List[str], translateStrList: List[str], append=True):
-    assert len(oriStrList) == len(translateStrList), "翻译存在遗漏"
-    mod = "w"
-    if append:
-        mod = "a"
-    with open(filePath, mod, encoding='utf-8') as f:
-        for i in range(len(oriStrList)):
-            f.write(oriStrList[i])
-            f.write("\n\n")
-            f.write(translateStrList[i])
-            f.write("\n\n\n\n")
-            f.flush()
-
-
-def splitQuery(query: str, length: int, splitChar='.') -> List[str]:
-    """按指定大小切分字符串,因为翻译接口有字符长度限制，这里做字符切分
-    @param query 需要分割的字符串
-    @param splitChar 分句的依据
-    @param length 限制单句长度
-    """
-    if len(query) <= length:
-        return [query]
-    t = query.rfind(splitChar, 0, length)
-    if t == -1:
-        if splitChar == ".":
-            return splitQuery(query, length, " ")
-        else:
-            totalLen = len(query)
-            res = []
-            maxSplit = int(totalLen / length)
-            for i in range(maxSplit):
-                res.append(query[i * length:(i + 1) * length])
-            if maxSplit * length < totalLen:
-                res.append(query[maxSplit * length:])
-            return res
-
-    currentStr = query[:t + 1]
-    if t + 1 < len(query):
-        nextStrList = splitQuery(query[t + 1:], length)
-        return [currentStr] + nextStrList
-    else:
-        return [currentStr]
-
-
 def MdFileGenerater(dirMdPath: str) -> str:
     """根据dirMdPath路径的文件夹下的pdf生成标题带链接的md文档"""
     assert os.path.exists(dirMdPath), "文件夹不存在"
@@ -217,8 +176,11 @@ if __name__ == '__main__':
     translaExe = Translator(opusMtTranslate, pdf2Txt=pdfToTxt, limitWordNum=512)
 
     dirPath = r""
-    mdGenerated = MdFileGenerater(dirPath)
-    translaExe.translateEnToCnWithDirFromPDF(dirPath)
+    # mdGenerated = MdFileGenerater(dirPath)
+    # translaExe.translateEnToCnWithDirFromPDF(dirPath)
 
     # filePath = r""
     # translaExe.translateEnToCnWithFile(filePath)
+
+    pdfToPdf = PdfToPdfWithoutImg(opusMtTranslate)
+    pdfToPdf.transferPdfWithDir(dirPath)
