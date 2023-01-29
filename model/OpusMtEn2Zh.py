@@ -11,7 +11,7 @@ opusDirName = os.path.dirname(__file__)
 
 
 class OpusMtEn2Zh(BaseTranslator, ABC):
-    def __init__(self, modelPath,max_length=512):
+    def __init__(self, modelPath, max_length=512):
         super().__init__(max_length=max_length)
         self.tokenizer = AutoTokenizer.from_pretrained(modelPath)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(modelPath)

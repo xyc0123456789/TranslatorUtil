@@ -156,6 +156,8 @@ def MdFileGenerater(dirMdPath: str) -> str:
         for subFiles in fileList:
             if not subFiles.endswith(".pdf"):
                 continue
+            if subFiles.startswith("Z_"):
+                continue
             currentPdf = os.path.join(dirMdPath, subFiles)
             f.write("# [" + subFiles[:-4] + "](file:///" + currentPdf + ")\n\n\n\n\n\n\n\n")
             f.flush()
@@ -170,17 +172,9 @@ def MdFileGenerater(dirMdPath: str) -> str:
 
 if __name__ == '__main__':
     myModelPath = os.path.join(opusDirName, "opus_mt_en_zh")
-    opusMtTranslate = OpusMtEn2Zh(myModelPath)
-
-    pdfToTxt = PDFToTxt()
-    translaExe = Translator(opusMtTranslate, pdf2Txt=pdfToTxt, limitWordNum=512)
-
-    dirPath = r""
-    # mdGenerated = MdFileGenerater(dirPath)
-    # translaExe.translateEnToCnWithDirFromPDF(dirPath)
-
-    # filePath = r""
-    # translaExe.translateEnToCnWithFile(filePath)
-
+    opusMtTranslate = OpusMtEn2Zh(myModelPath, max_length=512)
     pdfToPdf = PdfToPdfWithoutImg(opusMtTranslate)
+
+    dirPath = r"文件夹路径"
+    mdGenerated = MdFileGenerater(dirPath)
     pdfToPdf.transferPdfWithDir(dirPath)

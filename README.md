@@ -66,17 +66,10 @@ mklink /d "需要生成的软链接绝对路径" "C:\Users\xxx\.cache\huggingfac
 ```python
 if __name__ == '__main__':
     myModelPath = os.path.join(opusDirName, "opus_mt_en_zh") # 模型数据路径，自行修改
-    opusMtTranslate = OpusMtEn2Zh(myModelPath)
-
-    pdfToTxt = PDFToTxt()
-    translaExe = Translator(opusMtTranslate, pdf2Txt=pdfToTxt, limitWordNum=512) # 模型自带长度限制512
-
+	opusMtTranslate = OpusMtEn2Zh(myModelPath, max_length=512)
+	pdfToPdf = PdfToPdfWithoutImg(opusMtTranslate)
     dirPath = r"文件夹路径"
     mdGenerated = MdFileGenerater(dirPath)
-    # translaExe.translateEnToCnWithFile(mdGenerated)
-    translaExe.translateEnToCnWithDirFromPDF(dirPath)
-    
-    pdfToPdf = PdfToPdfWithoutImg(opusMtTranslate)
     pdfToPdf.transferPdfWithDir(dirPath)
 ```
 
