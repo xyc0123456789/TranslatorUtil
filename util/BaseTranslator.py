@@ -1,4 +1,5 @@
 import abc
+import re
 from typing import List
 
 
@@ -12,6 +13,7 @@ class BaseTranslator(metaclass=abc.ABCMeta):
         pass
 
     def translate(self, query: str) -> str:
+        query = re.sub('(?P<pre>[a-zA-z]+)(- )(?P<aft>[a-zA-z]+)', '\g<pre>\g<aft>', query)
         toTranslate = splitQuery(query, self.max_length)
         ans = ""
         for i in toTranslate:
