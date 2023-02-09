@@ -189,6 +189,10 @@ class PdfToPdfWithoutImg:
                                 res = self.translator.translate(trans_pragraph).replace(' ', '')  # 翻译结果去掉汉字中的空格
                                 new_page.insert_textbox(r, res, fontname="song", fontfile=self.frontFilePath, fontsize=7,
                                                         align=fitz.TEXT_ALIGN_CENTER)
+                            elif is_table(trans_pragraph):  # 将该块的判断是否是表格标注
+                                res = self.translator.translate(trans_pragraph).replace(' ', '')  # 翻译结果去掉汉字中的空格
+                                new_page.insert_textbox(r, res, fontname="song", fontfile=self.frontFilePath, fontsize=7,
+                                                        align=fitz.TEXT_ALIGN_CENTER)
                             # 标记在这里之后的都是参考文献
                             elif is_reference(trans_pragraph.replace(' ', '')):
                                 reference_flag = 1
@@ -240,6 +244,10 @@ def is_reference(target):
 def is_figure(target):
     """正则匹配图片标注"""
     return re.match(r'fig.*?\.', target, re.I)
+
+
+def is_table(target):
+    return re.match(r'^table \d+.*', target, re.I)
 
 
 def is_image(target):
