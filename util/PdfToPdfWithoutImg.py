@@ -33,15 +33,24 @@ class PdfToPdfWithoutImg:
         self.frontFilePath = frontFilePath
         assert os.path.exists(self.frontFilePath), "fonts file not exists"
 
-    def transferPdfWithDir(self, pdfDirPath, targetDirPath=""):
+    def transferPdfWithDir(self, pdfDirPath, targetDirPath="", continueTransfer=True):
         assert os.path.exists(pdfDirPath), pdfDirPath + " not exists"
         renameFlag = False
         if targetDirPath is not None and targetDirPath != "":
             os.makedirs(targetDirPath, exist_ok=True)
             renameFlag = True
 
+        hasTransfor = []
+        if continueTransfer:
+            for i in os.listdir(pdfDirPath):
+                if i.startswith("Z_") and i.endswith(".pdf"):
+                    hasTransfor.append(i[2:-20] + ".pdf")
+
         for i in os.listdir(pdfDirPath):
             if not i.endswith(".pdf"):
+                continue
+            if continueTransfer and i in hasTransfor:
+                print(i+" has been translated")
                 continue
             if renameFlag:
                 tFile = os.path.join(targetDirPath, i)
