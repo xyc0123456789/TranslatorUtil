@@ -64,8 +64,7 @@ class PdfToPdfWithoutImg:
             t1 = time.time()
             costList.append(t1 - t0)
             pageSizeList.append(pageSize)
-            print(
-                f"当前耗时:{int(t1 - t0)}s, 翻译页数:{pageSize}, 每页平均耗时:{int((t1 - t0) / pageSize)}s, 总耗时:{int(np.sum(costList))}s, 翻译总页数:{np.sum(pageSizeList)}, 每页平均耗时:{int(np.sum(costList) / np.sum(pageSizeList))}s")
+            print(f"当前耗时:{int(t1 - t0)}s, 翻译页数:{pageSize}, 每页平均耗时:{int((t1 - t0) / pageSize)}s, 总耗时:{int(np.sum(costList))}s, 翻译总页数:{np.sum(pageSizeList)}, 每页平均耗时:{int(np.sum(costList) / np.sum(pageSizeList))}s")
 
     def transferPdf(self, pdfPath: str, targetPdfPath="", tempDir="", toTxt=True):
         """
