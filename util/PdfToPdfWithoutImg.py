@@ -49,10 +49,10 @@ class PdfToPdfWithoutImg:
         costList = []
         pageSizeList = []
         for i in os.listdir(pdfDirPath):
-            if not i.endswith(".pdf"):
+            if not i.endswith(".pdf") or i.startswith("Z_"):
                 continue
             if continueTransfer and i in hasTransfor:
-                print(i+" has been translated")
+                print("《" + i + "》 has been translated")
                 continue
             t0 = time.time()
             if renameFlag:
@@ -62,9 +62,10 @@ class PdfToPdfWithoutImg:
             else:
                 pageSize = self.transferPdf(os.path.join(pdfDirPath, i))
             t1 = time.time()
-            costList.append(t1-t0)
+            costList.append(t1 - t0)
             pageSizeList.append(pageSize)
-            print(f"当前耗时:{int(t1-t0)}s, 翻译页数:{pageSize}, 每页平均耗时:{int((t1-t0) / pageSize)}s, 总耗时:{int(np.sum(costList))}s, 翻译总页数:{np.sum(pageSizeList)}, 每页平均耗时:{int(np.sum(costList)/np.sum(pageSizeList))}s")
+            print(
+                f"当前耗时:{int(t1 - t0)}s, 翻译页数:{pageSize}, 每页平均耗时:{int((t1 - t0) / pageSize)}s, 总耗时:{int(np.sum(costList))}s, 翻译总页数:{np.sum(pageSizeList)}, 每页平均耗时:{int(np.sum(costList) / np.sum(pageSizeList))}s")
 
     def transferPdf(self, pdfPath: str, targetPdfPath="", tempDir="", toTxt=True):
         """
@@ -78,8 +79,6 @@ class PdfToPdfWithoutImg:
         assert pdfPath.endswith(".pdf"), pdfPath + " is not pdf"
 
         file_name = os.path.basename(pdfPath)
-        if file_name.startswith("Z_"):
-            return
         pdfDir = os.path.dirname(pdfPath)
         if targetPdfPath == "" or targetPdfPath is None:
             curtime = time.strftime("_%Y%m%d_%H%M%S", time.localtime())
@@ -247,6 +246,7 @@ class PdfToPdfWithoutImg:
         t1 = time.time()
         print("Total translation time: %g sec" % (t1 - t0))
         return i
+
 
 def is_reference(target):
     """正则匹配参考文献"""
