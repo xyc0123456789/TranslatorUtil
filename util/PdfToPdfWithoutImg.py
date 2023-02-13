@@ -84,22 +84,18 @@ class PdfToPdfWithoutImg:
             imgcount = 0
             writeimgcount = 0
             reference_flag = 0  # 判断是否在参考文献之后
+            imageDict = {}
             for cur_page in cur_pdf:
                 print('正在翻译 {} 第{}页...'.format(file_name, i + 1))
                 img_list = cur_page.get_images()  # 获取当前页面的图片对象
 
                 for img in img_list:  # 获取当前页面的图像列表
-                    pix_temp1 = fitz.Pixmap(cur_pdf, img[0])
-                    if img[1]:
-                        pix_temp2 = fitz.Pixmap(cur_pdf, img[1])
-                        pix_temp = fitz.Pixmap(pix_temp1)
-                        pix_temp.set_alpha(pix_temp2.samples)
-                    else:
-                        pix_temp = pix_temp1
+                    pix_temp = cur_pdf.extract_image(img[0])
+                    image_name = f"image{imgcount}.{pix_temp['ext']}"
+                    with open(os.path.join(tempDir, image_name), "wb") as f:
+                        f.write(pix_temp["image"])
+                    imageDict[imgcount] = image_name
                     imgcount += 1
-                    new_name = "图片{}.png".format(imgcount)  # 生成图片的名称
-                    pix_temp.save(os.path.join(tempDir, new_name))
-                    pix_temp = None  # 释放资源
                 blks = cur_page.get_text_blocks(flags=4)  # read text blocks of input page
                 new_page = new_pdf.new_page(-1, width=cur_page.mediabox_size[0], height=cur_page.mediabox_size[1])  # 创建一个新的页面与之前的页面相同大小
                 begin = (0, 0, 0, 0)  # 记录初始值
@@ -116,10 +112,10 @@ class PdfToPdfWithoutImg:
                     # 如果这个块里放的是图像.
                     if blks[num][-1] == 1:
                         # print('图像:::',blks[num][4])
-                        writeimgcount += 1
                         img_r = blks[num][:4]  # 图片要放置位置的坐标
                         try:
-                            path_img = os.path.join(tempDir, '图片{}.png'.format(writeimgcount))  # 当前页面第几个图片的位置
+                            path_img = os.path.join(tempDir, imageDict[writeimgcount])  # 当前页面第几个图片的位置
+                            writeimgcount += 1
                             img = open(path_img, "rb").read()  # 输入流
                             new_page.insert_image(img_r, stream=img, keep_proportion=True)  # 输入到新的pdf页面对应位置
                             # os.remove(path_img)  # 输入到新的pdf之后就移除
