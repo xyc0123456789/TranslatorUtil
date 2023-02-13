@@ -21,6 +21,7 @@ import time
 import traceback
 
 import fitz
+import numpy as np
 
 from model.DoNothingTranslator import DoNothingTranslator
 from model.OpusMtEn2Zh import opusDirName, OpusMtEn2Zh
@@ -45,19 +46,25 @@ class PdfToPdfWithoutImg:
             for i in os.listdir(pdfDirPath):
                 if i.startswith("Z_") and i.endswith(".pdf"):
                     hasTransfor.append(i[2:-20] + ".pdf")
-
+        costList = []
+        pageSizeList = []
         for i in os.listdir(pdfDirPath):
             if not i.endswith(".pdf"):
                 continue
             if continueTransfer and i in hasTransfor:
                 print(i+" has been translated")
                 continue
+            t0 = time.time()
             if renameFlag:
                 tFile = os.path.join(targetDirPath, i)
                 tDir = os.path.join(targetDirPath, i[:-4])
-                self.transferPdf(os.path.join(pdfDirPath, i), targetPdfPath=tFile, tempDir=tDir)
+                pageSize = self.transferPdf(os.path.join(pdfDirPath, i), targetPdfPath=tFile, tempDir=tDir)
             else:
-                self.transferPdf(os.path.join(pdfDirPath, i))
+                pageSize = self.transferPdf(os.path.join(pdfDirPath, i))
+            t1 = time.time()
+            costList.append(t1-t0)
+            pageSizeList.append(pageSize)
+            print(f"当前耗时:{int(t1-t0)}s, 翻译页数:{pageSize}, 每页平均耗时:{int((t1-t0) / pageSize)}s, 总耗时:{int(np.sum(costList))}s, 翻译总页数:{np.sum(pageSizeList)}, 每页平均耗时:{int(np.sum(costList)/np.sum(pageSizeList))}s")
 
     def transferPdf(self, pdfPath: str, targetPdfPath="", tempDir="", toTxt=True):
         """
@@ -239,7 +246,7 @@ class PdfToPdfWithoutImg:
         new_pdf.save(targetPdfPath, garbage=4, deflate=True, clean=True)  # 保存翻译后的pdf
         t1 = time.time()
         print("Total translation time: %g sec" % (t1 - t0))
-
+        return i
 
 def is_reference(target):
     """正则匹配参考文献"""
