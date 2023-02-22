@@ -159,7 +159,7 @@ def MdFileGenerater(dirMdPath: str) -> str:
             if subFiles.startswith("Z_"):
                 continue
             currentPdf = os.path.join(dirMdPath, subFiles)
-            f.write("# [" + subFiles[:-4] + "](file:///" + currentPdf + ")\n\n\n\n\n\n\n\n")
+            f.write("# [" + subFiles[:-4] + "](" + subFiles + ")\n\n\n\n\n\n\n\n")
             f.flush()
     return targetfile
 
